@@ -1,18 +1,18 @@
 {
-  "name": "gemini-chatbot",
+  "name": "muziekmaatje",
   "version": "0.1.0",
   "private": true,
-  "description": "Een Next.js template met Gemini AI integratie, geoptimaliseerd voor Bolt + Netlify deployment",
+  "description": "AI-assistent voor zangpedagogen om lesvoorbereidingen te maken",
   "keywords": [
     "nextjs",
     "gemini",
     "ai",
-    "chatbot",
-    "netlify",
-    "bolt",
+    "zangles",
+    "muziek",
+    "pedagogie",
     "typescript"
   ],
-  "author": "Tom Naberink",
+  "author": "MuziekMaatje",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
