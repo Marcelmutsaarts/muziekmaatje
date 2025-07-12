@@ -1,13 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { generatePDF, generateTextPDF } from '@/utils/pdfGenerator'
+import EditableContent from '@/components/EditableContent'
 
 interface LessonPrepDisplayProps {
   lessonPrep: string
   isLoading: boolean
+  onContentChange?: (newContent: string) => void
 }
 
-export default function LessonPrepDisplay({ lessonPrep, isLoading }: LessonPrepDisplayProps) {
+export default function LessonPrepDisplay({ lessonPrep, isLoading, onContentChange }: LessonPrepDisplayProps) {
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
 
   const copyToClipboard = async (text: string, section: string) => {
@@ -20,34 +23,16 @@ export default function LessonPrepDisplay({ lessonPrep, isLoading }: LessonPrepD
     }
   }
 
-  const printLessonPrep = () => {
-    const printContent = document.getElementById('lesson-prep-content')
-    if (printContent) {
-      const printWindow = window.open('', '', 'height=800,width=600')
-      printWindow?.document.write(`
-        <html>
-          <head>
-            <title>Lesvoorbereiding</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-              h1 { color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 10px; }
-              h2 { color: #8b5cf6; margin-top: 30px; }
-              h3 { color: #a78bfa; margin-top: 20px; }
-              .section { margin-bottom: 25px; padding: 15px; border-left: 4px solid #e5e7eb; }
-              .timing { background-color: #f3f4f6; padding: 5px 10px; border-radius: 15px; font-size: 0.9em; }
-              ul, ol { padding-left: 20px; }
-              li { margin-bottom: 5px; }
-              .highlight { background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; }
-            </style>
-          </head>
-          <body>
-            ${printContent.innerHTML}
-          </body>
-        </html>
-      `)
-      printWindow?.document.close()
-      printWindow?.print()
-    }
+  const handlePDFExport = async () => {
+    // Try text-based PDF first for better quality
+    generateTextPDF(lessonPrep, {
+      title: 'Lesvoorbereiding',
+      type: 'lesson-prep'
+    })
+  }
+
+  const handlePrint = () => {
+    window.print()
   }
 
   return (
@@ -71,7 +56,16 @@ export default function LessonPrepDisplay({ lessonPrep, isLoading }: LessonPrepD
                 {copiedSection === 'full' ? 'Gekopieerd!' : 'Kopieer'}
               </button>
               <button
-                onClick={printLessonPrep}
+                onClick={handlePDFExport}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                PDF
+              </button>
+              <button
+                onClick={handlePrint}
                 className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +98,7 @@ export default function LessonPrepDisplay({ lessonPrep, isLoading }: LessonPrepD
         ) : lessonPrep ? (
           <div className="p-8">
             <div id="lesson-prep-content" className="space-y-6">
-              {formatLessonPrepAdvanced(lessonPrep, copyToClipboard, copiedSection)}
+              {formatLessonPrepAdvanced(lessonPrep, copyToClipboard, copiedSection, onContentChange)}
             </div>
           </div>
         ) : (
@@ -123,7 +117,7 @@ export default function LessonPrepDisplay({ lessonPrep, isLoading }: LessonPrepD
   )
 }
 
-function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, section: string) => void, copiedSection: string | null): JSX.Element {
+function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, section: string) => void, copiedSection: string | null, onContentChange?: (newContent: string) => void): JSX.Element {
   const sections = text.split(/(?=##\s)/)
   
   return (
@@ -213,7 +207,18 @@ function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, 
             </div>
             
             <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: formatContent(content) }} />
+              <EditableContent
+                content={content}
+                onSave={(newContent) => {
+                  // Update this section in the full lesson prep
+                  const updatedLessonPrep = text.replace(content, newContent)
+                  onContentChange?.(updatedLessonPrep)
+                }}
+                className="bg-white/50 rounded-lg p-4 min-h-[100px]"
+                placeholder="Inhoud voor dit onderdeel..."
+                renderMode="formatted"
+                formatFunction={formatContent}
+              />
             </div>
           </div>
         )
@@ -223,23 +228,46 @@ function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, 
 }
 
 function formatContent(content: string): string {
+  if (!content || typeof content !== 'string') return ''
+  
   let formatted = content
-    // Convert bold text
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800 bg-yellow-100 px-1 rounded">$1</strong>')
-    // Convert italic text
-    .replace(/\*(.*?)\*/g, '<em class="text-gray-700">$1</em>')
-    // Convert bullet points
-    .replace(/^- (.*?)$/gm, '<li class="mb-2 text-gray-700">$1</li>')
-    // Convert numbered lists
-    .replace(/^\d+\. (.*?)$/gm, '<li class="mb-2 text-gray-700">$1</li>')
+    // Convert headers first
+    .replace(/^### (.*?)$/gm, '<h4 class="text-lg font-bold mt-4 mb-2 text-gray-800">$1</h4>')
+    .replace(/^## (.*?)$/gm, '<h3 class="text-xl font-bold mt-6 mb-3 text-gray-800">$1</h3>')
+    .replace(/^# (.*?)$/gm, '<h2 class="text-2xl font-bold mt-8 mb-4 text-gray-800">$1</h2>')
     
-  // Wrap consecutive list items in ul/ol tags
-  formatted = formatted.replace(/(^<li class="mb-2 text-gray-700">.*?<\/li>\n)+/gm, (match) => {
-    return `<ul class="list-disc list-inside mb-4 space-y-1 ml-4">${match}</ul>`
+    // Convert bold text with better styling
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800 bg-yellow-50 px-1 py-0.5 rounded">$1</strong>')
+    
+    // Convert italic text
+    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+    
+    // Convert bullet points with better spacing
+    .replace(/^- (.*?)$/gm, '<li class="mb-1 text-gray-700 leading-relaxed">$1</li>')
+    
+    // Convert numbered lists
+    .replace(/^\d+\. (.*?)$/gm, '<li class="mb-1 text-gray-700 leading-relaxed">$1</li>')
+  
+  // Wrap consecutive bullet points in ul tags
+  formatted = formatted.replace(/(^<li class="mb-1 text-gray-700 leading-relaxed">.*?<\/li>\n?)+/gm, (match) => {
+    if (match.includes('1. ') || /^\d+\./.test(match)) {
+      return `<ol class="list-decimal list-inside mb-4 space-y-1 ml-4 text-gray-700">${match}</ol>`
+    }
+    return `<ul class="list-disc list-inside mb-4 space-y-1 ml-4 text-gray-700">${match}</ul>`
   })
   
-  // Add paragraph tags to remaining text blocks
-  formatted = formatted.replace(/^(?!<[hulo])(.+)$/gm, '<p class="mb-3 text-gray-700 leading-relaxed">$1</p>')
+  // Convert line breaks to paragraphs for better readability
+  formatted = formatted
+    .split('\n\n')
+    .map(paragraph => {
+      const trimmed = paragraph.trim()
+      if (!trimmed) return ''
+      // Don't wrap if it's already wrapped in HTML tags
+      if (trimmed.match(/^<[hulo]/)) return trimmed
+      return `<p class="mb-3 text-gray-700 leading-relaxed">${trimmed}</p>`
+    })
+    .filter(p => p.length > 0)
+    .join('\n')
   
   return formatted
 }

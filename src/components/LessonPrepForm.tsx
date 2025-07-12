@@ -5,6 +5,7 @@ import { useState } from 'react'
 interface LessonPrepFormProps {
   onLessonPrepGenerated: (prep: string) => void
   setIsLoading: (loading: boolean) => void
+  onStudentNameChange?: (name: string) => void
 }
 
 const methodologies = [
@@ -27,7 +28,7 @@ const levels = [
   'Professioneel'
 ]
 
-export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading }: LessonPrepFormProps) {
+export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading, onStudentNameChange }: LessonPrepFormProps) {
   const [studentName, setStudentName] = useState('')
   const [background, setBackground] = useState('')
   const [lessonGoal, setLessonGoal] = useState('')
@@ -79,7 +80,10 @@ export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading }: 
             type="text"
             id="studentName"
             value={studentName}
-            onChange={(e) => setStudentName(e.target.value)}
+            onChange={(e) => {
+              setStudentName(e.target.value)
+              onStudentNameChange?.(e.target.value)
+            }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             placeholder="Bijv. Anna de Vries"
             required

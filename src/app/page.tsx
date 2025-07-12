@@ -1,12 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import LessonPrepForm from '@/components/LessonPrepForm'
 import LessonPrepDisplay from '@/components/LessonPrepDisplay'
+import ExerciseSchemeForm from '@/components/ExerciseSchemeForm'
+import ProfessionalExerciseDisplay from '@/components/ProfessionalExerciseDisplay'
+import TabNavigation from '@/components/TabNavigation'
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'lesson-prep' | 'exercise-scheme'>('lesson-prep')
   const [lessonPrep, setLessonPrep] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [exerciseScheme, setExerciseScheme] = useState<string>('')
+  const [isExerciseLoading, setIsExerciseLoading] = useState(false)
+  const [currentStudentName, setCurrentStudentName] = useState<string>('')
+  const [lessonPrepFormName, setLessonPrepFormName] = useState<string>('')
+
+  // Use the name from the lesson prep form input, not auto-extracted
+  useEffect(() => {
+    if (lessonPrepFormName) {
+      setCurrentStudentName(lessonPrepFormName)
+    }
+  }, [lessonPrepFormName])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
@@ -28,25 +43,55 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Tab Navigation */}
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
         {/* Main Content */}
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Form Section */}
-            <div>
-              <LessonPrepForm 
-                onLessonPrepGenerated={setLessonPrep}
-                setIsLoading={setIsLoading}
-              />
-            </div>
+          {activeTab === 'lesson-prep' ? (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Form Section */}
+              <div>
+                <LessonPrepForm 
+                  onLessonPrepGenerated={setLessonPrep}
+                  setIsLoading={setIsLoading}
+                  onStudentNameChange={setLessonPrepFormName}
+                />
+              </div>
 
-            {/* Display Section */}
-            <div>
-              <LessonPrepDisplay 
-                lessonPrep={lessonPrep}
-                isLoading={isLoading}
-              />
+              {/* Display Section */}
+              <div>
+                <LessonPrepDisplay 
+                  lessonPrep={lessonPrep}
+                  isLoading={isLoading}
+                  onContentChange={setLessonPrep}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Exercise Form Section */}
+              <div>
+                <ExerciseSchemeForm 
+                  existingLessonPrep={lessonPrep}
+                  onExerciseSchemeGenerated={setExerciseScheme}
+                  setIsLoading={setIsExerciseLoading}
+                  onStudentNameChange={setCurrentStudentName}
+                  prefillStudentName={lessonPrepFormName}
+                />
+              </div>
+
+              {/* Exercise Display Section */}
+              <div>
+                <ProfessionalExerciseDisplay 
+                  exerciseScheme={exerciseScheme}
+                  isLoading={isExerciseLoading}
+                  studentName={currentStudentName}
+                  onContentChange={setExerciseScheme}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
