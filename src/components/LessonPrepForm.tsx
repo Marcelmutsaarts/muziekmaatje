@@ -17,7 +17,8 @@ const methodologies = [
   'Alexander Techniek',
   'Feldenkrais',
   'Lichtenberger Methode',
-  'Algemene pedagogiek'
+  'Algemene pedagogiek',
+  'Anders/Custom'
 ]
 
 const levels = [
@@ -33,11 +34,15 @@ export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading, on
   const [background, setBackground] = useState('')
   const [lessonGoal, setLessonGoal] = useState('')
   const [methodology, setMethodology] = useState('')
+  const [customMethodology, setCustomMethodology] = useState('')
   const [level, setLevel] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+
+    // Use custom methodology if "Anders/Custom" is selected
+    const finalMethodology = methodology === 'Anders/Custom' ? customMethodology : methodology
 
     try {
       const response = await fetch('/api/lesson-prep', {
@@ -49,7 +54,7 @@ export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading, on
           studentName,
           background,
           lessonGoal,
-          methodology,
+          methodology: finalMethodology,
           level
         }),
       })
@@ -130,7 +135,13 @@ export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading, on
           <select
             id="methodology"
             value={methodology}
-            onChange={(e) => setMethodology(e.target.value)}
+            onChange={(e) => {
+              setMethodology(e.target.value)
+              // Clear custom methodology when switching away from custom option
+              if (e.target.value !== 'Anders/Custom') {
+                setCustomMethodology('')
+              }
+            }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             required
           >
@@ -142,6 +153,27 @@ export default function LessonPrepForm({ onLessonPrepGenerated, setIsLoading, on
             ))}
           </select>
         </div>
+
+        {/* Custom Methodology Input */}
+        {methodology === 'Anders/Custom' && (
+          <div>
+            <label htmlFor="customMethodology" className="block text-sm font-medium text-gray-700 mb-2">
+              Eigen methodiek invullen
+            </label>
+            <input
+              type="text"
+              id="customMethodology"
+              value={customMethodology}
+              onChange={(e) => setCustomMethodology(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              placeholder="Bijv. Somatic Voicework, Roy Hart Method, etc."
+              required
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Vul hier je eigen methodiek of combinatie van methodieken in.
+            </p>
+          </div>
+        )}
 
         {/* Level */}
         <div>

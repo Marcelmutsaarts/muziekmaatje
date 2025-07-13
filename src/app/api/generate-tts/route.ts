@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use direct REST API call for TTS since SDK doesn't support TTS yet
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${process.env.GEMINI_API_KEY}`
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key=${process.env.GEMINI_API_KEY}`
     
     // Apply style to text if provided
     const styledText = applyStylePrompt(text, style)

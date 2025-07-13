@@ -20,6 +20,7 @@ export default function ExerciseSchemeForm({
   const [lessonContent, setLessonContent] = useState(existingLessonPrep || '')
   const [studentName, setStudentName] = useState('')
   const [practiceTime, setPracticeTime] = useState(20)
+  const [daysPerWeek, setDaysPerWeek] = useState(3)
   const [focusAreas, setFocusAreas] = useState('')
   const [difficulty, setDifficulty] = useState('medium')
 
@@ -37,6 +38,7 @@ export default function ExerciseSchemeForm({
           lessonContent,
           studentName,
           practiceTime,
+          daysPerWeek,
           focusAreas,
           difficulty
         }),
@@ -161,6 +163,40 @@ export default function ExerciseSchemeForm({
               {practiceTime <= 15 ? '⚡ Kort & krachtig' :
                practiceTime <= 30 ? '🎯 Balans' :
                '🏃‍♀️ Intensief'}
+            </span>
+          </div>
+        </div>
+
+        {/* Days Per Week */}
+        <div>
+          <label htmlFor="daysPerWeek" className="block text-sm font-medium text-gray-700 mb-2">
+            Aantal oefendagen per week: <span className="font-bold text-green-600">{daysPerWeek} {daysPerWeek === 1 ? 'dag' : 'dagen'}</span>
+          </label>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-500">1 dag</span>
+            <input
+              type="range"
+              id="daysPerWeek"
+              min="1"
+              max="7"
+              step="1"
+              value={daysPerWeek}
+              onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-green"
+            />
+            <span className="text-sm text-gray-500">7 dagen</span>
+          </div>
+          <div className="mt-2 text-center">
+            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+              daysPerWeek <= 2 ? 'bg-red-100 text-red-800' :
+              daysPerWeek <= 4 ? 'bg-yellow-100 text-yellow-800' :
+              daysPerWeek <= 6 ? 'bg-green-100 text-green-800' :
+              'bg-blue-100 text-blue-800'
+            }`}>
+              {daysPerWeek <= 2 ? '🎯 Intensief' :
+               daysPerWeek <= 4 ? '⚖️ Gebalanceerd' :
+               daysPerWeek <= 6 ? '🌟 Regelmatig' :
+               '🏆 Dagelijks'}
             </span>
           </div>
         </div>

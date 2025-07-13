@@ -126,14 +126,17 @@ export default function ProfessionalExerciseDisplay({
       if (titleLower.includes('introductie') || titleLower.includes('inleiding')) {
         return { icon: '🎯', color: 'from-emerald-400 to-teal-400', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200' }
       }
+      if (titleLower.includes('dag') && titleLower.match(/dag\s+[0-9]+/)) {
+        return { icon: '📅', color: 'from-cyan-400 to-blue-400', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200' }
+      }
       return { icon: '💡', color: 'from-yellow-400 to-amber-400', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200' }
     }
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
       
-      // Check for section headers
-      if (line.match(/^#+\s+/) || line.match(/^\*\*.*?\*\*/) || line.match(/^[0-9]+\./)) {
+      // Check for main section headers (## with numbers) OR day sections (Dag X)
+      if (line.match(/^##\s+[0-9]+\./) || line.match(/^##\s+[IVX]+\./) || line.match(/^#\s+[0-9]+\./) || line.match(/^\*\*Dag\s+[0-9]+/)) {
         // Save previous section
         if (currentSection) {
           currentSection.content = currentContent.join('\n').trim()
@@ -208,11 +211,18 @@ export default function ProfessionalExerciseDisplay({
     }
 
     // Filter out sections with empty, meaningless, or teacher-oriented content
-    const filteredSections = sections.filter(section => {
+    const filteredSections = sections.filter((section, index) => {
       const content = section.content.trim().toLowerCase()
+      const titleLower = section.title.toLowerCase()
       
       // Filter out empty content
       if (content.length === 0) return false
+      
+      // Stop after section 5 (zelfevaluatie) - don't include any sections after it
+      if (titleLower.includes('zelfevaluatie') || titleLower.includes('5.')) {
+        // Include this section but mark it as the last one
+        sections.splice(index + 1) // Remove all sections after this one
+      }
       
       // Filter out teacher-oriented content in general info sections
       if (section.title === 'Algemene informatie') {

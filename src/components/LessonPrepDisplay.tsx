@@ -127,25 +127,36 @@ function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, 
         
         const lines = section.trim().split('\n')
         const title = lines[0]?.replace(/^#+\s*/, '') || ''
-        const content = lines.slice(1).join('\n')
+        const content = lines.slice(1).join('\n').trim()
+        
+        // Skip sections with no meaningful content
+        if (!title || !content) return null
         
         // Determine section type and styling
         const getSectionConfig = (title: string) => {
           const titleLower = title.toLowerCase()
+          if (titleLower.includes('lesoverzicht') || titleLower.includes('overzicht')) {
+            return { 
+              icon: '📋', 
+              color: 'bg-indigo-50 border-indigo-200', 
+              headerColor: 'text-indigo-700',
+              timing: ''
+            }
+          }
           if (titleLower.includes('warming') || titleLower.includes('warm')) {
             return { 
               icon: '🔥', 
               color: 'bg-orange-50 border-orange-200', 
               headerColor: 'text-orange-700',
-              timing: '10 min'
+              timing: '10-15 min'
             }
           }
-          if (titleLower.includes('technische') || titleLower.includes('oefening')) {
+          if (titleLower.includes('technische') || titleLower.includes('training')) {
             return { 
               icon: '🎯', 
               color: 'bg-blue-50 border-blue-200', 
               headerColor: 'text-blue-700',
-              timing: '15 min'
+              timing: '15-20 min'
             }
           }
           if (titleLower.includes('repertoire')) {
@@ -153,18 +164,18 @@ function formatLessonPrepAdvanced(text: string, copyToClipboard: (text: string, 
               icon: '🎵', 
               color: 'bg-green-50 border-green-200', 
               headerColor: 'text-green-700',
-              timing: '20 min'
+              timing: '15-20 min'
             }
           }
-          if (titleLower.includes('afsluiting') || titleLower.includes('huiswerk')) {
+          if (titleLower.includes('afsluiting')) {
             return { 
               icon: '📝', 
               color: 'bg-purple-50 border-purple-200', 
               headerColor: 'text-purple-700',
-              timing: '5 min'
+              timing: '5-10 min'
             }
           }
-          if (titleLower.includes('aandachtspunten')) {
+          if (titleLower.includes('docententips') || titleLower.includes('aandachtspunten')) {
             return { 
               icon: '💡', 
               color: 'bg-yellow-50 border-yellow-200', 

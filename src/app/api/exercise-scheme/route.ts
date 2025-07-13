@@ -5,73 +5,76 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: Request) {
   try {
-    const { lessonContent, studentName, practiceTime, focusAreas, difficulty } = await request.json()
+    const { lessonContent, studentName, practiceTime, daysPerWeek, focusAreas, difficulty } = await request.json()
 
     // Gebruik Gemini 2.5 Pro (altijd het krachtigste model)
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro-preview-06-05" })
 
-    const difficultyMapping = {
-      easy: 'makkelijke basisoefeningen die de geleerde technieken herhalen',
-      medium: 'oefeningen van gemiddelde moeilijkheid die nieuwe technieken introduceren en bestaande verdiepen',
-      hard: 'uitdagende oefeningen die verfijning en technische excellentie bevorderen'
-    }
+    const prompt = `Je bent een ervaren zangpedagoog die een gedetailleerd en motiverend oefenschema voor thuis opstelt. Maak een praktisch weekschema dat de leerling zelfstandig kan volgen.
 
-    const prompt = `Maak een persoonlijk huiswerk oefenschema voor ${studentName} op basis van de volgende informatie:
+GEGEVENS:
+- Naam leerling: ${studentName}
+- Lesvoorbereiding inhoud: ${lessonContent}
+- Beschikbare oefentijd per dag: ${practiceTime} minuten
+- Aantal oefendagen per week: ${daysPerWeek}
+- Moeilijkheidsgraad: ${difficulty}
+- Extra aandachtspunten: ${focusAreas || 'Geen specifieke aandachtspunten'}
 
-**Lesvoorbereiding basis:**
-${lessonContent}
+OPDRACHT:
+Creëer een gestructureerd oefenschema voor één week, gebaseerd op de lesvoorbereiding. Verdeel de oefeningen slim over het aantal opgegeven dagen, waarbij je rekening houdt met de beschikbare tijd en de moeilijkheidsgraad.
 
-**Beschikbare tijd:** ${practiceTime} minuten per dag
-**Moeilijkheidsgraad:** ${difficultyMapping[difficulty as keyof typeof difficultyMapping]}
-**Extra aandachtspunten:** ${focusAreas || 'Geen specifieke aandachtspunten'}
+BELANGRIJK: Start je antwoord DIRECT met "## 1. Overzicht en doelen voor deze week" - GEEN inleidende tekst.
 
-BELANGRIJK: Begin direct met het oefenschema. Geef GEEN inleiding, uitleg voor de pedagoog, of algemene commentaar. Start meteen met de titel en het schema.
+WEEKSCHEMA STRUCTUUR:
 
-Maak een compleet oefenschema met de volgende structuur:
+## 1. Overzicht en doelen voor deze week
+- Formuleer 2-3 concrete, haalbare weekdoelen gebaseerd op de lesvoorbereiding
+- Geef een motiverende openingszin
+- Leg kort uit waarom deze oefeningen belangrijk zijn
 
-## Oefenschema voor ${studentName}
+## 2. Dagelijkse basisroutine (voor elke oefendag)
+- Warming-up (tijd en specifieke oefeningen uit de les)
+- Kernonderdelen voor elke dag
+- Cool-down/afsluiting
+- Totale tijdsduur moet passen binnen de opgegeven oefentijd
 
-### 🎯 Introductie
-Schrijf hier een korte, bemoedigende introductie voor ${studentName} van 2-3 zinnen die uitlegt:
-- Wat de bedoeling is van dit oefenschema
-- Hoe het gebruikt moet worden (dagelijks oefenen)
-- Een bemoedigende afsluiting
+## 3. Dag-specifieke focus
+Maak voor elke oefendag een schema met:
+- **Dag X - Focus: [specifiek onderdeel]**
+  * Warming-up (X minuten): [specifieke oefeningen]
+  * Hoofdoefening (X minuten): [wat en hoe]
+  * Extra aandacht (X minuten): [specifieke techniek]
+  * Repertoire (X minuten): [welk stuk/deel]
+  * Notities: [waar op letten]
 
-### 📅 Dagelijkse Planning (${practiceTime} minuten)
+## 4. Progressie en variatie
+- Beschrijf hoe de leerling door de week heen kan opbouwen
+- Geef aan wanneer oefeningen moeilijker gemaakt kunnen worden
+- Bied alternatieven voor dagen met minder energie/tijd
 
-**Opwarming** (${Math.round(practiceTime * 0.2)} minuten)
-- Specifieke opwarmoefeningen
-- Ademhalingsoefeningen
+## 5. Zelfevaluatie en tips
+- Geef 3-4 concrete checkpunten waar de leerling op kan letten
+- Beschrijf wanneer een oefening 'geslaagd' is
+- Voeg motivatietips toe voor moeilijke momenten
+- Leg uit hoe de leerling voortgang kan bijhouden
 
-**Techniek** (${Math.round(practiceTime * 0.4)} minuten)
-- Gebaseerd op de lesvoorbereiding
-- Stapsgewijze oefeningen
+SPECIFIEKE RICHTLIJNEN:
 
-**Repertoire** (${Math.round(practiceTime * 0.3)} minuten)
-- Liederen of vocalen uit de les
-- Specifieke passages om te oefenen
+- Bij "easy": focus op consolidatie van bekende oefeningen, veel herhaling, opbouwen van vertrouwen
+- Bij "medium": balans tussen bekende oefeningen en nieuwe technieken uit de les, stapsgewijze opbouw
+- Bij "hard": focus op perfectie, nuances, combineren van technieken, zelfstandig experimenteren
 
-**Afsluiting** (${Math.round(practiceTime * 0.1)} minuten)
-- Cool-down oefeningen
-- Reflectie
+- Gebruik ALLEEN oefeningen die in de lesvoorbereiding genoemd worden
+- Pas de intensiteit aan op basis van de moeilijkheidsgraad
+- Integreer eventuele extra aandachtspunten in het schema
+- Maak het schema zo concreet dat de leerling het zonder docent kan uitvoeren
+- Gebruik heldere tijdsaanduidingen die optellen tot de beschikbare oefentijd
 
-### 🎯 Weekoverzicht
-
-**Dag 1-2:** [Focus gebied 1]
-**Dag 3-4:** [Focus gebied 2]  
-**Dag 5-6:** [Combinatie en herhaling]
-**Dag 7:** [Vrije keuze/rust]
-
-### 📝 Belangrijke Tips
-- Praktische tips voor thuisoefening
-- Wat te doen bij problemen
-- Hoe vooruitgang te meten
-
-### ⚠️ Let Op
-- Waarschuwingen en aandachtspunten
-- Wanneer te stoppen met oefenen
-
-Maak het schema concreet, praktisch en motiverend. Gebruik Nederlandse termen maar geef waar relevant ook de technische/Engelse termen. Houd rekening met het niveau van de leerling en zorg dat de oefeningen uitvoerbaar zijn zonder begeleiding.`
+SCHRIJFSTIJL:
+- Direct en praktisch, alsof je tegen de leerling praat
+- Motiverend maar realistisch
+- Gebruik de naam van de leerling 1-2 keer in het schema
+- Eindig met een bemoedigende afsluiting`
 
     const result = await model.generateContent(prompt)
     const response = await result.response
